@@ -1,15 +1,15 @@
 {
-  "name": "AlfalahApp",
-  "short_name": "AlfalahApp",
+  "name": "AMQA",
+  "short_name": "AMQA",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#594AE2",
   "theme_color": "#03173d",
   "icons": [
     {
-      "src": "icon-512.png",
+      "src": "logo.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "585x585"
     }
   ]
 }
