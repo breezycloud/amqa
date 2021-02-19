@@ -1,0 +1,113 @@
+﻿@using AlfalahApp.Shared
+@inject HttpClient Http
+@inject ISnackbar snackBar 
+ 
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="6">
+                <MudTextField T="string" Label="Academic Session" @bind-Value="currentYear" Variant="Variant.Filled" Disabled="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudSelect T="string" @bind-Text="selectedTerm" ValueChanged="Load" Label="Term" Variant="Variant.Filled">
+                    <MudSelectItem Value="@("First")" />
+                    <MudSelectItem Value="@("Second")" />
+                    <MudSelectItem Value="@("Third")" />
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Employee Name" @bind-Value="employee.EName"  Variant="Variant.Filled" Disabled="true" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="decimal" Label="Other Earning" @bind-Value="paySlip.OtherEarning" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="decimal" Label="IOU" @bind-Value="paySlip.Iou" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="decimal" Label="Loan" @bind-Value="paySlip.Loans" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudTextField T="decimal" Label="Other Deduction" @bind-Value="paySlip.OtherDeduction" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField T="string" Label="Note" @bind-Value="paySlip.Note" Variant="Variant.Filled" />
+            </MudItem>
+        </MudGrid>
+        <MudGrid Justify="Justify.SpaceEvenly">            
+            <MudItem xs="6">                
+            </MudItem>            
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton @onclick="Cancel">Close</MudButton>
+        <MudButton @onclick="MoveNext" Color="Color.Primary">Save &amp; Continue </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@*@if (isSaving)
+{
+    <ProgressLoader Status="Saving"/>
+}*@
+@code {        
+
+    //private bool isSaving = false;
+    private string selectedTerm { get; set; }
+    private string currentYear { get; set; } = DateTime.Now.ToString("yyyy");
+    private int currentIndex = 0, totalRecords = 0;
+
+    private List<Employee> employees = new List<Employee>();
+    private Employee employee = new Employee();
+    private PaySlip paySlip = new PaySlip();
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    void Cancel() => MudDialog.Close(DialogResult.Ok(true));
+
+    async Task Load()
+    {
+        employees = await Http.GetFromJsonAsync<List<Employee>>($"api/employeedetails/unprocessed?term={selectedTerm}&session={currentYear}");
+        totalRecords = employees.Count == 0 ? 0 : employees.Count;
+        if (totalRecords > 0)
+        {
+            employee = employees[currentIndex];
+            return;
+        }
+        Info($"Salary for {selectedTerm} term {currentYear} has already been prepared!");
+    }
+
+    async Task MoveNext()
+    {
+        var newSlip = new PaySlip()
+        {
+            Id = Guid.NewGuid(),
+            Empid = employee.Id,
+            Paydate = DateTime.Today,
+            AcdSession = currentYear,
+            Term = selectedTerm,
+            OtherEarning = paySlip.OtherEarning,
+            Iou = paySlip.Iou,
+            Loans = paySlip.Loans,
+            OtherDeduction = paySlip.OtherDeduction,
+            Note = paySlip.Note
+        };
+
+        await Http.PostAsJsonAsync<PaySlip>("api/payslips", newSlip);
+        currentIndex++;
+        if (currentIndex < totalRecords)
+        {
+            employee = employees[currentIndex];
+            return;
+        }
+        Success("Payslip generated successfully");
+        Cancel();
+
+    }
+
+    void Success(string message) => snackBar.Add(message, Severity.Success);
+
+    void Error(string message) => snackBar.Add(message, Severity.Error);
+
+    void Info(string message) => snackBar.Add(message, Severity.Info);
+
+}

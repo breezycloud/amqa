@@ -1,0 +1,17 @@
+﻿<div class="progress-container">
+    <div class="progress-box">
+        <MudPaper Elevation="1" Style="height: 100px; width:150px;">
+            <center>
+                <div class="pa-5">
+                    <MudProgressCircular Color="Color.Info" Indeterminate="true" />
+                    <MudText Typo="Typo.h6">@Status</MudText>
+                </div>
+            </center>
+        </MudPaper>
+    </div>    
+</div>
+
+@code {
+    [Parameter]
+    public string Status { get; set; }
+}

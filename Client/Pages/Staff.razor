@@ -1,0 +1,127 @@
+﻿@page "/staff"
+@using AlfalahApp.Shared
+@inject HttpClient Http
+@inject ISnackbar snackBar
+@inject IDialogService Dialog
+
+<AuthorizeView>
+    <Authorized>
+        @if (employees == null)
+        {
+            <Loader />
+        }
+        else
+        {
+            <center>
+                <MudTable Items="@employees" Hover="true" Filter="new Func<Employee,bool>(FilterFunc)"
+                          @bind-SelectedItem="selectedEmployee" CommitEditTooltip="Commit Edit" OnCommitEditClick="@(()=>UpdateEmployee(selectedEmployee))">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Employee</MudText>
+                        <MudToolBarSpacer />
+                        <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Gender</MudTh>
+                        <MudTh>Designation</MudTh>
+                        <MudTh>Basic</MudTh>
+                        <MudTh>Transport</MudTh>
+                        <MudTh>Rent</MudTh>
+                        <MudTh>Tax</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="emp">
+                        <MudTd DataLabel="Name">@emp.EName</MudTd>
+                        <MudTd DataLabel="Gender">@emp.Gender</MudTd>
+                        <MudTd DataLabel="Designation">@emp.Dept</MudTd>
+                        <MudTd DataLabel="Basic">@emp.Basic</MudTd>
+                        <MudTd DataLabel="Transport">@emp.Transport</MudTd>
+                        <MudTd DataLabel="Rent">@emp.Rent</MudTd>
+                        <MudTd DataLabel="Tax">@emp.Tax</MudTd>
+                    </RowTemplate>
+                    <RowEditingTemplate Context="emp">
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.EName" Required="true" ReadOnly="true" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.Gender" Required="true" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.Dept" Required="true" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.Basic" Required="true" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.Transport" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.Rent" />
+                        </MudTd>
+                        <MudTd>
+                            <MudTextField @bind-Value="@emp.Tax" />
+                        </MudTd>
+                    </RowEditingTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            </center>
+        }
+        <div class="fabs-container">
+            <MudFab Class="fab" Color="Color.Primary" Icon="@Icons.Material.Filled.Menu" />
+            <ul class="fab-options">
+                <li>
+                    <MudTooltip Text="New Employee">
+                        <MudFab @onclick="EmployeeDialog" Color="Color.Primary" Icon="@Icons.Material.Outlined.Edit"></MudFab>
+                    </MudTooltip>
+                </li>
+                <li>
+                    <MudTooltip Text="Generate Payslip">
+                        <MudFab @onclick="OpenPaySlip" Color="Color.Secondary" Icon="@Icons.Material.Outlined.MonetizationOn"/>
+                    </MudTooltip>
+                </li>
+                <li>
+                    <MudTooltip Text="Preview Payslip">
+                        <MudFab @onclick="ExportPaySlip" Color="Color.Inherit" Icon="@Icons.Material.Outlined.Print" IconSize="Size.Medium" Size="Size.Medium"></MudFab>
+                    </MudTooltip>                    
+                </li>
+            </ul>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+
+    private string searchString = "";
+    private List<Employee> employees;
+    private Employee selectedEmployee = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await Http.GetFromJsonAsync<List<Employee>>("api/employeedetails");
+    }
+
+    private bool FilterFunc(Employee employee)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (employee.EName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        
+        return false;
+    }
+
+    private void OpenPaySlip() => Dialog.Show<GeneratePaySlip>("Prepare Payslip");
+
+    private void EmployeeDialog() => Dialog.Show<NewEmployee>("New Employee");
+
+    private void ExportPaySlip() => Dialog.Show<PrintPayslipDialog>("Print Payslip");
+
+    private async Task UpdateEmployee(Employee employee)
+    {
+        await Http.PutAsJsonAsync<Employee>($"api/employeedetails/{employee.Id}", employee);
+        snackBar.Add("Employee Details Updated", Severity.Info);
+    }
+}

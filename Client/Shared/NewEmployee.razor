@@ -1,0 +1,91 @@
+﻿@using AlfalahApp.Shared
+@inject HttpClient Http
+@inject ISnackbar snackBar
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" >
+                <MudTextField T="string" Label="First Name" @bind-Value="employee.EName" Variant="Variant.Filled" />
+            </MudItem>            
+            <MudItem xs="12" sm="6">
+                <MudSelect T="string" Label="Gender" @bind-Text="selectedGender">
+                    <MudSelectItem Value="@("M")" />
+                    <MudSelectItem Value="@("F")" />
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="string" Label="Designation" @bind-Value="employee.Dept" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="decimal" Label="Basic" @bind-Value="employee.Basic" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="decimal" Label="Transport" @bind-Value="employee.Transport" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="decimal" Label="Rent" @bind-Value="employee.Rent" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudTextField T="decimal" Label="Tax" @bind-Value="employee.Tax" Variant="Variant.Filled" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton @onclick="Cancel">Close</MudButton>
+        <MudButton @onclick="SaveEmployee" Color="Color.Primary">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@*@if (isSaving)
+{
+    <ProgressLoader Status="Saving"/>
+}*@
+
+@code {
+
+    //private bool isSaving = false;
+    private string selectedGender = "";
+    private Employee employee = new Employee();
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    void Cancel() => MudDialog.Close(DialogResult.Ok(true));
+
+    async Task SaveEmployee()
+    {
+        //isSaving = true;
+        await Http.PostAsJsonAsync<Employee>("api/employeedetails", Employee(employee));
+        //isSaving = false;
+
+        Success("Employee added successfully");
+        employee = new Employee();
+        selectedGender = "";
+    }
+
+    Employee Employee(Employee employee)
+    {
+        var newEmp = new Employee()
+        {
+            Id = Guid.NewGuid(),
+            EName = employee.EName,
+            Gender = selectedGender,
+            Dept = employee.Dept,
+            PhoneNumber1 = "N/A",
+            PhoneNumber2 = "N/A",
+            Basic = employee.Basic,
+            Transport = employee.Transport,
+            Rent = employee.Rent,
+            Tax = employee.Tax,
+            Status = true
+        };
+        return newEmp;
+    }
+
+    void Success(string message) => snackBar.Add(message, Severity.Success);
+
+    void Error(string message) => snackBar.Add(message, Severity.Error);
+
+    void Info(string message) => snackBar.Add(message, Severity.Info);
+
+}

@@ -1,0 +1,82 @@
+﻿@using AlfalahApp.Shared
+@inject HttpClient Http
+@inject ISnackbar snackBar
+@inject IJSRuntime jsRuntime
+
+
+@if (years == null)
+{
+    <Loader/>
+}
+else
+{
+    <MudDialog>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string" @bind-Text="selectedYear" Label="Academic Session" Variant="Variant.Filled" Disabled="enableControls">
+                        @foreach (var item in years)
+                        {
+                            <MudSelectItem T="string" Value="@item">@item</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="string" Label="Term" @bind-Text="selectedTerm" Variant="Variant.Filled" Disabled="enableControls">
+                        <MudSelectItem Value="@("First")" />
+                        <MudSelectItem Value="@("Second")" />
+                        <MudSelectItem Value="@("Third")" />
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButbton @onclick="Cancel">Close</MudButbton>
+            <MudButton Color="Color.Primary" Disabled="enableControls" @onclick="PreviewReport">Preview</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+@*@if (progressStatus)
+{
+    <ProgressLoader Status="Exporting"/>
+}*@
+
+
+@code{
+
+    private string selectedYear = "";
+    private string selectedTerm = "";
+    //private bool progressStatus = false;
+    private PaySlip[] payslips;
+    private bool enableControls = true;
+    private List<string> years = new List<string>();
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    void Cancel() => MudDialog.Close(DialogResult.Ok(true));
+
+    async Task PreviewReport()
+    {
+        //progressStatus = true;
+        var reportName = $"{selectedYear} {selectedTerm} Term Payslip.xlsx";
+        var reportBytes = await Http.GetByteArrayAsync($"api/payslips/report?Session={selectedYear}&Term={selectedTerm}");
+        await jsRuntime.InvokeAsync<object>("exportExcelFile", $"{reportName}", Convert.ToBase64String(reportBytes));
+        //progressStatus = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        payslips = await Http.GetFromJsonAsync<PaySlip[]>($"api/payslips");
+        if (payslips.Count() == 0)
+        {
+            Info("No salary record found!");
+            return;
+        }
+
+        var year = payslips.Select(i => i.AcdSession).Distinct().ToList();
+        years.AddRange(year);
+        enableControls = false;
+    }
+
+    void Info(string message) => snackBar.Add(message, Severity.Info);
+}

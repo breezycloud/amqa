@@ -1,0 +1,64 @@
+﻿@layout IndexLayout
+@page "/"
+@using AlfalahApp.Shared 
+@inject  HttpClient Http
+@inject  NavigationManager navigationManager
+@inject  ISnackbar snackBar
+
+<div class="loginform">
+    <MudPaper Elevation="1" Class="mx-auto" Style="height: 400px; width:350px;">
+        @if (logging)
+        {
+            <MudProgressLinear Color="Color.Secondary" Class="m-1" Indeterminate="true"/>
+        }
+        <div class="loginhead pa-3">
+            <svg width="5em" height="5em" viewBox="0 0 16 16" class="bi bi-person-circle" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.468 12.37C12.758 11.226 11.195 10 8 10s-4.757 1.225-5.468 2.37A6.987 6.987 0 0 0 8 15a6.987 6.987 0 0 0 5.468-2.63z" />
+                <path fill-rule="evenodd" d="M8 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                <path fill-rule="evenodd" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z" />
+            </svg>
+            <div class="pa-3">
+                <MudText Typo="Typo.h6" Class="">Enter your login credentials</MudText>
+            </div>
+            <EditForm Model="@user" OnValidSubmit="ValidateUser">
+                <div class="pa-2">
+                    <MudTextField T="string" Variant="Variant.Outlined" Margin="Margin.Normal"
+                                  Label="Username" Required="true" @bind-Value="user.Username"
+                                  RequiredError="User name is required!" InputType="InputType.Text"></MudTextField>
+
+                    <MudTextField T="string" Variant="Variant.Outlined" Margin="Margin.Normal"
+                                  Label="Password" @bind-Value="user.Passwordhash"
+                                  Required="true" RequiredError="Password is required!" InputType="InputType.Password"></MudTextField>
+                </div>
+                <div class="pa-2">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Style="width: 150px;">Login</MudButton>
+                </div>
+            </EditForm>
+        </div>
+    </MudPaper>
+</div>
+
+@code{
+    private User user;
+    private bool logging { get; set; }
+    protected override void OnInitialized()
+    {
+        user = new User();
+        base.OnInitialized();
+    }
+
+    private async Task ValidateUser()
+    {
+        logging = true;
+        var validUser = await Http.PostAsJsonAsync<User>("api/users/loginuser", user);
+        if (validUser.StatusCode == System.Net.HttpStatusCode.OK)
+            navigationManager.NavigateTo("/staff", true);
+        else
+        {
+            snackBar.Configuration.PositionClass = "Top-Center";
+            snackBar.Configuration.VisibleStateDuration = 3000;
+            snackBar.Add("Incorrect Username or Password", Severity.Error);
+        }
+        logging = false;
+    }
+}

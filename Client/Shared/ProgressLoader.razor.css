@@ -1,0 +1,14 @@
+﻿.progress-container {
+    height: 500px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.progress-box {
+    display: block;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+}
+

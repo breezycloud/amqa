@@ -1,0 +1,47 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+
+<MudLayout>
+    <MudAppBar Elevation="25">        
+        <MudText Typo="Typo.h5" Class="ml-3">Payroll</MudText>
+        <MudAppBarSpacer />
+        <AuthorizeView>
+            <Authorized>
+                <MudTooltip Text="Click to Log out">
+                    <MudButton StartIcon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Variant="Variant.Text" Size="Size.Medium" OnClick="Logout">Log Out</MudButton>
+                </MudTooltip>                 
+            </Authorized>
+        </AuthorizeView>
+    </MudAppBar>
+    <MudMainContent>
+        <div class="content px-5">
+            @Body
+            <MudScrollToTop TopOffset="400">
+                <MudFab Icon="@Icons.Material.Filled.KeyboardArrowUp" Color="Color.Primary" />
+            </MudScrollToTop>
+
+        </div>        
+    </MudMainContent>
+</MudLayout>
+
+@code {
+
+    //bool _drawerOpen = false;
+
+    //void DrawerToggle()
+    //{
+    //    _drawerOpen = !_drawerOpen;
+    //}
+
+
+    private void Navigate(string page) => NavigationManager.NavigateTo($"/{page}");
+
+    public async Task Logout()
+    {
+        await Http.GetAsync("api/users/logoutuser");
+        NavigationManager.NavigateTo("/", true);
+    }
+
+}
