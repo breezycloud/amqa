@@ -3,13 +3,13 @@
   "short_name": "AMQA",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#594AE2",
+  "background_color": "#ffffff",
   "theme_color": "#03173d",
   "icons": [
     {
       "src": "logo.png",
       "type": "image/png",
-      "sizes": "585x585"
+      "sizes": "512x512"
     }
   ]
 }

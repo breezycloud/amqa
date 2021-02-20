@@ -48,7 +48,7 @@ namespace AlfalahApp.Server.Context
 
                 entity.Property(e => e.Dept)
                     .IsRequired()
-                    .HasMaxLength(20);
+                    .HasMaxLength(50);
 
                 entity.Property(e => e.EName)
                     .IsRequired()

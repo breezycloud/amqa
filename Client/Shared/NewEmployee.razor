@@ -9,9 +9,9 @@
                 <MudTextField T="string" Label="First Name" @bind-Value="employee.EName" Variant="Variant.Filled" />
             </MudItem>            
             <MudItem xs="12" sm="6">
-                <MudSelect T="string" Label="Gender" @bind-Text="selectedGender">
-                    <MudSelectItem Value="@("M")" />
-                    <MudSelectItem Value="@("F")" />
+                <MudSelect T="string" Label="Gender" @bind-Value="selectedGender"  Variant="Variant.Filled">
+                    <MudSelectItem Value="@("M")">M</MudSelectItem>
+                    <MudSelectItem Value="@("F")">F</MudSelectItem>
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" sm="6">
@@ -45,7 +45,7 @@
 @code {
 
     //private bool isSaving = false;
-    private string selectedGender = "";
+    private string selectedGender { get; set; }
     private Employee employee = new Employee();
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
@@ -55,15 +55,23 @@
     async Task SaveEmployee()
     {
         //isSaving = true;
-        await Http.PostAsJsonAsync<Employee>("api/employeedetails", Employee(employee));
+        var newEmp = await GetEmployee(employee);
+        var response = await Http.PostAsJsonAsync<Employee>("api/employeedetails", newEmp);
+        Console.Write(response.StatusCode);
+        if (response.IsSuccessStatusCode)
+        {
+            Success("Employee added successfully");
+            employee = new Employee();
+        }
+        else
+        {
+            Error("Error occured while saving data");
+        }
         //isSaving = false;
 
-        Success("Employee added successfully");
-        employee = new Employee();
-        selectedGender = "";
     }
 
-    Employee Employee(Employee employee)
+    async Task<Employee> GetEmployee(Employee employee)
     {
         var newEmp = new Employee()
         {
@@ -79,6 +87,7 @@
             Tax = employee.Tax,
             Status = true
         };
+        await Task.Delay(0);
         return newEmp;
     }
 
